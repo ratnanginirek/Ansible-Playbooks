@@ -1,0 +1,6 @@
+
+- name: VRO using govc
+  hosts: all
+  tasks:
+  - name: Deploy vRO using govc
+    command: sh /var/lib/awx/projects/_6__ansible_vro_govc/govc.sh
