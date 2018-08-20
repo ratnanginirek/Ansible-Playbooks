@@ -1,0 +1,40 @@
+- name: Gather log files
+  hosts: nexus_switch
+  gather_facts: no
+  vars:
+   backup_root: /etc/ansible/net_device_backups
+   creds:
+     host: "{{ host }}"
+     username: "{{ un }}"
+     password: "{{ pwd }}"
+     transport: cli
+
+  tasks:
+  - nxos_command:
+        provider: "{{ creds }}"
+        commands: show running-config
+    register: show_run
+  - name: get logs
+    nxos_command:
+     provider: "{{ creds }}"
+     commands:
+      - command: show logging logfile
+        output: json
+    register: nxos_logs
+  - debug:
+        msg: "{{ nxos_logs.stdout[0] }}"
+  - name: ensure backup folder is created
+    file:
+     path: "{{ backup_root }}"
+     state: directory
+    run_once: yes
+  - name: ensure device folder is created
+    file:
+     path: "{{ backup_root }}/{{ inventory_hostname }}"
+     state: directory
+  - name: get timestamp
+    command: date +%Y%m%d
+    register: timestamp
+  - copy:
+          content: "{{ nxos_logs.stdout[0] }}"
+          dest: "{{ backup_root }}/{{ inventory_hostname }}/nxos-logs"
